@@ -1,0 +1,41 @@
+##Study Name: The development of the assimilation of evidence ##in a motivated reasoning context.
+##Authors: Prachi Solanki and Zachary Horne
+##Date: November 9, 2017
+##Exploratory or Confirmatory: Exploratory
+
+require(brms)
+require(rstan)
+require(Rcpp)
+require(ggplot2)
+
+##Before analysis do not analyze data for children who failed ##to complete the study
+
+##reduced model
+
+model0 <- brm(Judgment ~ (1|Item) + (1|Subject),
+                 data=evidence_assimilation_data,family="bernoulli", chains=4, cores = getOption("mc.cores", 4L), 
+                 iter=6000, warmup=3000, control = list(adapt_delta = .90), save_all_pars=TRUE)
+summary(model0)
+
+##full model -- Are kids choosing the badge at different ##rates given the distribution of evidence against the badge?
+
+model1 <- brm(Judgment ~ Condition + (1|Item) + (1|Subject),
+                 data=evidence_assimilation_data,family="bernoulli", chains=4, cores = getOption("mc.cores", 4L), 
+                 iter=6000, warmup=3000, control = list(adapt_delta = .90), save_all_pars=TRUE,
+                 prior = c(set_prior("normal(0,.5)", class = "b")))
+
+summary(model1)
+
+bayes_factor(model1,model0)
+
+## Are kids of different ages affected in different ways by ##the distributions of evidence? 
+
+
+model2 <- brm(Judgment ~ Condition + Age + Condition*Age + (1|Item) + (1|Subject),
+                 data=evidence_assimilation_data,family="bernoulli", chains=4, cores = getOption("mc.cores", 4L), 
+                 iter=6000, warmup=3000, control = list(adapt_delta = .90), save_all_pars=TRUE,
+                 prior = c(set_prior("normal(0,.5)", class = "b")))
+
+summary(model2)
+
+bayes_factor(model2,model1)
